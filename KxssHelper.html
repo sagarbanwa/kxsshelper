@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>--==::[[KXX Helper]]::==-</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+			background-color: #D6DFE6;
+        }
+
+        #container {
+            margin: 0 auto;
+            width: 50%;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 22px); /* Adjusting for padding and borders */
+            height: 40px;
+            padding: 10px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .checkbox-container {
+            text-align: left;
+        }
+
+        .checkbox-info {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            z-index: 1;
+        }
+
+        .checkbox-info-button {
+            cursor: pointer;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .checkbox-list {
+            margin-top: 20px;
+        }
+
+        .checkbox-list label {
+            display: inline-block; /* Display labels inline */
+            margin-bottom: 5px;
+            margin-right: 10px; /* Add margin between checkbox and label */
+        }
+
+        .checkbox-list input[type="checkbox"] {
+            display: inline-block; /* Display checkboxes inline */
+            vertical-align: middle; /* Align checkboxes vertically with labels */
+        }
+
+        .checkbox-list input[type="text"] {
+            width: 200px; /* Adjust width of text input */
+            vertical-align: middle; /* Align text input vertically with labels */
+        }
+    </style>
+</head>
+<body>
+    <h1>--==::[[KXX Helper]]::==-</h1>
+    <div id="container">
+        <label for="inputText">Enter Text:</label>
+        <br>
+        <input type="text" id="inputText" oninput="modifyText()">
+        <br>
+        <label for="modifiedText">Modified Text:</label>
+        <br>
+        <input type="text" id="modifiedText">
+        <br>
+        <label for="curlRequest">cURL Request:</label>
+        <br>
+        <input type="text" id="curlRequest" class="curl-request" readonly>
+        <br>
+        <button onclick="copyModifiedText()">Copy Modified Text</button>
+        <button onclick="clearFields()">Clear</button>
+
+        <!-- Checkbox Explanations -->
+        <div class="checkbox-container">
+            <span class="checkbox-info-button" onclick="toggleCheckboxInfo()">ℹ️</span>
+            <div class="checkbox-info" id="checkboxInfo">
+                <p><strong>Checkbox Explanations:</strong></p>
+                <p><strong>Convert Special Characters:</strong> Encode special characters like & to %26.</p>
+                <p><strong>Add afb=1:</strong> Add the parameter afb=1 to the URL.</p>
+                <p><strong>Add &auth=:</strong> Add the parameter &auth= followed by the specified data to the URL.</p>
+                <p><strong>Add [XSS]:</strong> Append [XSS] to each parameter-value pair in the URL.</p>
+                <p><strong>Convert & to %26:</strong> Replace & with %26 in the URL.</p>
+                <p><strong>Use Pro API Key:</strong> Convert the URL into a cURL request with the Pro API key.</p>
+            </div>
+        </div>
+
+        <!-- Checkbox List -->
+        <div class="checkbox-list">
+            <input type="checkbox" id="convertCheckbox" onchange="modifyText()">
+            <label for="convertCheckbox">Convert Special Characters</label>
+            <input type="checkbox" id="afbCheckbox" onchange="modifyText()">
+            <label for="afbCheckbox">Add afb=1</label>
+            <input type="checkbox" id="authCheckbox" onchange="modifyText()">
+            <label for="authCheckbox">Add &auth=</label>
+            <input type="text" id="authData" oninput="modifyText()">
+            <input type="checkbox" id="xssCheckbox" onchange="modifyText()">
+            <label for="xssCheckbox">Add [XSS]</label>
+            <input type="checkbox" id="ampCheckbox" onchange="modifyText()">
+            <label for="ampCheckbox">Convert & to %26</label>
+            <input type="checkbox" id="proCheckbox" onchange="modifyText()">
+            <label for="proCheckbox">Use Pro API Key</label>
+            <input type="text" id="apiKey" placeholder="Enter Pro API Key" style="margin-top: 5px;" disabled>
+        </div>
+    </div>
+
+    <script>
+        function modifyText() {
+            var input = document.getElementById("inputText").value;
+            var modified = input;
+
+            // Check if convert checkbox is checked
+            if (document.getElementById("convertCheckbox").checked) {
+                modified = encodeURIComponent(input);
+            }
+
+            // Check if amp checkbox is checked
+            if (document.getElementById("ampCheckbox").checked) {
+                modified = modified.replace(/&/g, '%26');
+            }
+
+            // Check if afb checkbox is checked
+            if (document.getElementById("afbCheckbox").checked) {
+                modified += (modified.includes('?') ? '&' : '?') + 'afb=1';
+            }
+
+            // Check if auth checkbox is checked
+            if (document.getElementById("authCheckbox").checked) {
+                var authData = document.getElementById("authData").value;
+                modified += (modified.includes('?') ? '&' : '?') + 'auth=' + encodeURIComponent(authData);
+            }
+
+            // Check if XSS checkbox is checked
+            if (document.getElementById("xssCheckbox").checked) {
+                modified = modified.replace(/([^=&]+)=([^&]*)/g, '$1=$2[XSS]');
+            }
+
+            // Check if Pro API Key checkbox is checked
+            if (document.getElementById("proCheckbox").checked) {
+                var apiKey = document.getElementById("apiKey").value;
+                var targetURL = 'https://api.knoxss.pro -d \'target=' + modified + '&afb=1\' -H \'X-API-KEY: ' + apiKey + '\'';
+                document.getElementById("curlRequest").value = 'curl ' + targetURL;
+            } else {
+                // If no checkbox is checked, simply display the modified URL
+                document.getElementById("curlRequest").value = '';
+            }
+
+            document.getElementById("modifiedText").value = modified;
+        }
+
+        function copyModifiedText() {
+            var modifiedText = document.getElementById("modifiedText");
+            modifiedText.select();
+            document.execCommand("copy");
+        }
+
+        function toggleCheckboxInfo() {
+            var checkboxInfo = document.getElementById("checkboxInfo");
+            checkboxInfo.style.display = checkboxInfo.style.display === "none" ? "block" : "none";
+        }
+
+        // Enable/disable API Key input based on Pro API Key checkbox state
+        document.getElementById("proCheckbox").onchange = function() {
+            document.getElementById("apiKey").disabled = !this.checked;
+        };
+
+        // Function to clear all input fields
+        function clearFields() {
+            document.getElementById("inputText").value = "";
+            document.getElementById("modifiedText").value = "";
+            document.getElementById("curlRequest").value = "";
+            document.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+                checkbox.checked = false;
+            });
+            document.getElementById("authData").value = "";
+            document.getElementById("apiKey").value = "";
+        }
+    </script>
+</body>
+</html>
